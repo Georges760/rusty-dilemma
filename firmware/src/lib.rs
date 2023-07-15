@@ -18,13 +18,20 @@ use atomic_polyfill::AtomicU32;
 use embassy_executor::Spawner;
 use embassy_rp::bind_interrupts;
 use embassy_rp::dma::Channel;
+#[cfg(not(feature = "display"))]
 use embassy_rp::gpio::Input;
-use embassy_rp::gpio::{Level, Output, Pull};
-use embassy_rp::peripherals::{PIN_17, PIN_19, PIN_29, USB};
+#[cfg(not(feature = "display"))]
+use embassy_rp::gpio::Pull;
+use embassy_rp::gpio::{Level, Output};
+use embassy_rp::peripherals::PIN_17;
+#[cfg(not(feature = "display"))]
+use embassy_rp::peripherals::{PIN_19, PIN_29, USB};
 use embassy_rp::pio::Pio;
 use embassy_rp::rom_data::reset_to_usb_boot;
+#[cfg(not(feature = "display"))]
 use embassy_rp::usb::Driver;
 use embassy_time::{Duration, Timer};
+#[cfg(not(feature = "display"))]
 use shared::side::KeyboardSide;
 
 #[cfg(not(feature = "probe"))]
@@ -34,8 +41,11 @@ use {defmt_rtt as _, panic_probe as _};
 
 use utils::log;
 
+#[cfg(not(feature = "display"))]
 use crate::keys::ScannerInstance;
 
+#[cfg(feature = "display")]
+pub mod display;
 pub mod event;
 #[cfg(feature = "bootloader")]
 pub mod fw_update;
@@ -56,12 +66,14 @@ pub fn set_status_led(value: Level) {
 
 pub static VERSION: &str = "0.1.0";
 
+#[cfg(not(feature = "display"))]
 fn detect_usb(pin: Input<'_, PIN_19>) -> bool {
     let connected = pin.is_high();
     log::info!("Usb connected? {}", connected);
     connected
 }
 
+#[cfg(not(feature = "display"))]
 fn detect_side(pin: Input<'_, PIN_29>) -> KeyboardSide {
     let is_right = pin.is_high();
     let side = if is_right {
@@ -107,27 +119,29 @@ pub async fn main(spawner: Spawner) {
     // not sure if this makes the usb detection happier
     Timer::after(Duration::from_micros(100)).await;
 
-    let s = detect_side(Input::new(p.PIN_29, embassy_rp::gpio::Pull::Down));
-    side::init(
-        s,
-        detect_usb(Input::new(p.PIN_19, embassy_rp::gpio::Pull::Down)),
-    );
+    #[cfg(not(feature = "display"))]
+    {
+        let s = detect_side(Input::new(p.PIN_29, embassy_rp::gpio::Pull::Down));
+        side::init(
+            s,
+            detect_usb(Input::new(p.PIN_19, embassy_rp::gpio::Pull::Down)),
+        );
 
-    if side::this_side_has_usb() {
-        log::info!("usb connected");
-        bind_interrupts!(struct Irqs {
-            USBCTRL_IRQ => embassy_rp::usb::InterruptHandler<USB>;
-        });
+        if side::this_side_has_usb() {
+            log::info!("usb connected");
+            bind_interrupts!(struct Irqs {
+                USBCTRL_IRQ => embassy_rp::usb::InterruptHandler<USB>;
+            });
 
-        let usb_driver = Driver::new(p.USB, Irqs);
+            let usb_driver = Driver::new(p.USB, Irqs);
 
-        usb::init(&spawner, usb_driver);
-    } else {
-        log::info!("No usb connected");
+            usb::init(&spawner, usb_driver);
+        } else {
+            log::info!("No usb connected");
+        }
+
+        rng::init();
     }
-
-    rng::init();
-
     #[cfg(not(feature = "probe"))]
     logger::init();
 
@@ -139,47 +153,63 @@ pub async fn main(spawner: Spawner) {
         PIO0_IRQ_0 => embassy_rp::pio::InterruptHandler<embassy_rp::peripherals::PIO0>;
     });
 
-    bind_interrupts!(struct PioIrq1 {
-        PIO1_IRQ_0 => embassy_rp::pio::InterruptHandler<embassy_rp::peripherals::PIO1>;
-    });
-
     let mut pio0 = Pio::new(p.PIO0, PioIrq0);
     interboard::init(&spawner, &mut pio0.common, pio0.sm0, pio0.sm1, p.PIN_1);
 
-    let mut pio1 = Pio::new(p.PIO1, PioIrq1);
-    rgb::init(&spawner, &mut pio1.common, pio1.sm0, p.PIN_10, p.DMA_CH2);
+    #[cfg(not(feature = "display"))]
+    {
+        bind_interrupts!(struct PioIrq1 {
+            PIO1_IRQ_0 => embassy_rp::pio::InterruptHandler<embassy_rp::peripherals::PIO1>;
+        });
 
-    let scanner = ScannerInstance::new(
-        (
-            Input::new(p.PIN_4, Pull::Up),
-            Input::new(p.PIN_5, Pull::Up),
-            Input::new(p.PIN_27, Pull::Up),
-            Input::new(p.PIN_26, Pull::Up),
-        ),
-        (
-            Output::new(p.PIN_8, Level::Low),
-            Output::new(p.PIN_9, Level::Low),
-            Output::new(p.PIN_7, Level::Low),
-            Output::new(p.PIN_6, Level::Low),
-            Output::new(p.PIN_28, Level::Low),
-        ),
-    );
+        let mut pio1 = Pio::new(p.PIO1, PioIrq1);
+        rgb::init(&spawner, &mut pio1.common, pio1.sm0, p.PIN_10, p.DMA_CH2);
 
-    keys::init(&spawner, scanner);
-
-    if side::get_side().is_right() {
-        log::info!("Initializing trackpad");
-        trackpad::init(
-            &spawner,
-            p.SPI0,
-            p.PIN_22,
-            p.PIN_23,
-            p.PIN_20,
-            p.PIN_21,
-            p.DMA_CH0.degrade(),
-            p.DMA_CH1.degrade(),
+        let scanner = ScannerInstance::new(
+            (
+                Input::new(p.PIN_4, Pull::Up),
+                Input::new(p.PIN_5, Pull::Up),
+                Input::new(p.PIN_27, Pull::Up),
+                Input::new(p.PIN_26, Pull::Up),
+            ),
+            (
+                Output::new(p.PIN_8, Level::Low),
+                Output::new(p.PIN_9, Level::Low),
+                Output::new(p.PIN_7, Level::Low),
+                Output::new(p.PIN_6, Level::Low),
+                Output::new(p.PIN_28, Level::Low),
+            ),
         );
+
+        keys::init(&spawner, scanner);
+
+        if side::get_side().is_right() {
+            log::info!("Initializing trackpad");
+            trackpad::init(
+                &spawner,
+                p.SPI0,
+                p.PIN_22,
+                p.PIN_23,
+                p.PIN_20,
+                p.PIN_21,
+                p.DMA_CH0.degrade(),
+                p.DMA_CH1.degrade(),
+            );
+        }
     }
+
+    #[cfg(feature = "display")]
+    display::init(
+        &spawner,
+        p.SPI1,
+        p.PIN_10,
+        p.PIN_11,
+        p.PIN_9,
+        p.PIN_8,
+        p.PIN_12,
+        p.PIN_25,
+        p.DMA_CH0.degrade(),
+    );
 
     let mut counter = 0u8;
     loop {
