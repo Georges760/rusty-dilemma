@@ -1,7 +1,7 @@
 use embassy_executor::Spawner;
 use embassy_rp::{
     dma::AnyChannel,
-    gpio::{self, Level, Output},
+    gpio::{Level, Output},
     peripherals::{PIN_10, PIN_11, PIN_12, PIN_25, PIN_8, PIN_9, SPI1},
     spi::{self, Async, Spi},
 };
@@ -48,7 +48,7 @@ pub fn init(
 
     let spi = Spi::new_txonly(spi, clk, mosi, tx_dma, config);
 
-    let spi = ExclusiveDevice::new(spi, Output::new(cs, gpio::Level::High), Delay);
+    let spi = ExclusiveDevice::new(spi, Output::new(cs, Level::High), Delay);
 
     let dc = Output::new(dc, Level::Low);
     let rst = Output::new(rst, Level::Low);
