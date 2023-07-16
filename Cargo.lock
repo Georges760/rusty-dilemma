@@ -1762,6 +1762,7 @@ dependencies = [
  "pio-proc",
  "postcard",
  "rand",
+ "rand_core",
  "serde",
  "shared",
  "static_cell",
