@@ -48,6 +48,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "async-trait"
+version = "0.1.71"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a564d521dd56509c4c47480d00b80ee55f7e385ae48db5744c67ad50c92d2ebf"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.23",
+]
+
+[[package]]
 name = "atomic-polyfill"
 version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -453,6 +464,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "display-interface"
+version = "0.5.0-alpha.1"
+source = "git+https://github.com/bugadani/display-interface.git?branch=ehal1#3add6e256b6263d0a0fb474c167b99ad27d34bdf"
+dependencies = [
+ "async-trait",
+]
+
+[[package]]
+name = "display-interface-spi"
+version = "0.5.0-alpha.1"
+source = "git+https://github.com/bugadani/display-interface.git?branch=ehal1#3add6e256b6263d0a0fb474c167b99ad27d34bdf"
+dependencies = [
+ "async-trait",
+ "byte-slice-cast",
+ "display-interface",
+ "embedded-hal 1.0.0-alpha.11",
+ "embedded-hal-async",
+]
+
+[[package]]
 name = "either"
 version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -648,6 +679,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "embedded-graphics"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cd2a8e0250a7e1212828166b01eed0219e488ebb2599f44624a29c9bd249f397"
+dependencies = [
+ "az",
+ "byteorder",
+ "embedded-graphics-core",
+ "float-cmp",
+ "micromath",
+]
+
+[[package]]
+name = "embedded-graphics-core"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ba9ecd261f991856250d2207f6d8376946cd9f412a2165d3b75bc87a0bc7a044"
+dependencies = [
+ "az",
+ "byteorder",
+]
+
+[[package]]
 name = "embedded-hal"
 version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -798,6 +852,15 @@ name = "fixedbitset"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ce7134b9999ecaf8bcd65542e436736ef32ddca1b3e06094cb6ec5755203b80"
+
+[[package]]
+name = "float-cmp"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "98de4bbd547a563b716d8dfa9aad1cb19bfab00f4fa09a6a4ed21dbcf44ce9c4"
+dependencies = [
+ "num-traits",
+]
 
 [[package]]
 name = "fnv"
@@ -1176,6 +1239,25 @@ name = "memchr"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
+
+[[package]]
+name = "micromath"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "39617bc909d64b068dcffd0e3e31679195b5576d0c83fadc52690268cc2b2b55"
+
+[[package]]
+name = "mipidsi"
+version = "0.8.0-alpha.1"
+source = "git+https://github.com/Georges760/mipidsi.git?branch=feat/async-support#8df8529d37d3fcfa637bd1a1a19376b928339682"
+dependencies = [
+ "display-interface",
+ "embedded-graphics-core",
+ "embedded-hal 1.0.0-alpha.11",
+ "embedded-hal-async",
+ "heapless",
+ "nb 1.1.0",
+]
 
 [[package]]
 name = "nb"
@@ -1728,6 +1810,7 @@ dependencies = [
  "defmt",
  "defmt-rtt",
  "dilemma_macros",
+ "display-interface-spi",
  "embassy-boot-rp",
  "embassy-embedded-hal",
  "embassy-executor",
@@ -1736,6 +1819,7 @@ dependencies = [
  "embassy-sync",
  "embassy-time",
  "embassy-usb",
+ "embedded-graphics",
  "embedded-hal 0.2.7",
  "embedded-hal 1.0.0-alpha.11",
  "embedded-hal-async",
@@ -1746,6 +1830,7 @@ dependencies = [
  "heapless",
  "keyberon",
  "log",
+ "mipidsi",
  "num",
  "num_enum 0.6.1",
  "once_cell",

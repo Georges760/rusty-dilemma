@@ -16,6 +16,9 @@ https://github.com/simmsb/rusty-dilemma/assets/5330444/2e6345b6-a52b-436a-b9c9-5
 - The device pretends to be a RP Pico and supports being put into DFU mode by
   `picotool`
 
+## Options
+- Round 1.28' AMOLED LCD support (add `--features gc9a01` to the `cargo objcopy` command)
+
 ## Building
 
 - `cargo objcopy --release -- target/binary.elf`
