@@ -8,6 +8,7 @@ use embassy_sync::{
     blocking_mutex::raw::ThreadModeRawMutex, channel::Channel, pubsub::PubSubChannel,
 };
 use embassy_time::Duration;
+#[cfg(feature = "display")]
 use heapless::String;
 use keyberon::{key_code::KeyCode, layout::Event};
 use packed_struct::PrimitiveEnum;
