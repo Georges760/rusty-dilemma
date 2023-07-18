@@ -92,21 +92,19 @@ phf = { version = "0.11.2", default-features = false }
 packed_struct = { version = "0.10.1", default-features = false }
 rand = { version = "0.8.5", default-features = false, features = ["small_rng"] }
 rp-binary-info = { git = "https://github.com/rp-rs/rp-binary-info.git", optional = true}
-display-interface-spi = { git = "https://github.com/bugadani/display-interface.git", branch = "ehal1", features = ["async", "nightly"], optional = true }
-mipidsi = { git = "https://github.com/Georges760/mipidsi.git", branch = "feat/async-support", features = ["async"], optional = true }
-embedded-graphics = { version = "0.8.0", optional = true }
+display-interface-spi = { git = "https://github.com/bugadani/display-interface.git", branch = "ehal1", features = ["async", "nightly"] }
+mipidsi = { git = "https://github.com/Georges760/mipidsi.git", branch = "feat/async-support", features = ["async"] }
+embedded-graphics = { version = "0.8.0" }
 
 [features]
 probe = ["defmt", "defmt-rtt", "panic-probe", "shared/defmt", "embassy-embedded-hal/defmt", "embassy-sync/defmt", "embassy-executor/defmt", "embassy-time/defmt", "embassy-time/defmt-timestamp-uptime", "embassy-rp/defmt", "embassy-usb/defmt", "postcard/use-defmt"]
 bootloader = ["embassy-boot-rp"]
 binaryinfo = ["rp-binary-info"]
 
-display = ["display-interface-spi", "mipidsi", "embedded-graphics"]
-gc9a01 = ["display"]
-
 m2 = []
+gc9a01 = []
 
-default = ["binaryinfo"]
+default = ["binaryinfo", "gc9a01"]
 
 [build-dependencies]
 chrono = "0.4.19"

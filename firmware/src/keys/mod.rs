@@ -8,15 +8,13 @@ use embassy_sync::{
     blocking_mutex::raw::ThreadModeRawMutex, channel::Channel, pubsub::PubSubChannel,
 };
 use embassy_time::Duration;
-#[cfg(feature = "display")]
 use heapless::String;
 use keyberon::{key_code::KeyCode, layout::Event};
 use packed_struct::PrimitiveEnum;
 use usbd_human_interface_device::device::keyboard::NKROBootKeyboardReport;
 
-#[cfg(feature = "display")]
-use crate::display::display_key_code;
 use crate::{
+    display::display_key_code,
     interboard::{self, THIS_SIDE_MESSAGE_BUS},
     messages::{
         device_to_device::{DeviceToDevice, MouseState},
@@ -192,7 +190,6 @@ async fn key_event_processor() {
             })))
             .await;
 
-            #[cfg(feature = "display")]
             if side::get_side().is_left() {
                 let mut s: String<24> = String::new();
                 for i in state.iter() {
@@ -247,11 +244,7 @@ pub fn init(spawner: &Spawner, scanner: ScannerInstance<'static>) {
     spawner.must_spawn(matrix_processor());
     spawner.must_spawn(matrix_scanner(scanner));
     spawner.must_spawn(send_events_to_other_side());
-    #[cfg(not(feature = "display"))]
-    let cond = side::this_side_has_usb();
-    #[cfg(feature = "display")]
-    let cond = side::this_side_has_usb() || side::get_side().is_left();
-    if cond {
+    if side::this_side_has_usb() || side::get_side().is_left() {
         spawner.must_spawn(receive_events_from_other_side());
         spawner.must_spawn(key_event_processor());
     }

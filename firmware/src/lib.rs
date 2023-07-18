@@ -38,7 +38,6 @@ use crate::keys::ScannerInstance;
 
 #[cfg(feature = "binaryinfo")]
 pub mod binary_info;
-#[cfg(feature = "display")]
 pub mod display;
 pub mod event;
 #[cfg(feature = "bootloader")]
@@ -171,7 +170,6 @@ pub async fn main(spawner: Spawner) {
 
     keys::init(&spawner, scanner);
 
-    #[cfg(not(feature = "display"))]
     if side::get_side().is_right() {
         log::info!("Initializing trackpad");
         trackpad::init(
@@ -184,10 +182,7 @@ pub async fn main(spawner: Spawner) {
             p.DMA_CH0.degrade(),
             p.DMA_CH1.degrade(),
         );
-    }
-
-    #[cfg(feature = "display")]
-    if side::get_side().is_left() {
+    } else {
         log::info!("Initializing display");
         display::init(
             &spawner,
