@@ -2,7 +2,8 @@ use embassy_executor::Spawner;
 use embassy_rp::{
     dma::AnyChannel,
     gpio::{Level, Output},
-    peripherals::{PIN_11, PIN_12, PIN_13, PIN_16, PIN_22, PIN_23, SPI0},
+    peripherals::{PIN_11, PIN_12, PIN_13, PIN_16, PIN_22, PIN_23, PWM_CH0, SPI0},
+    pwm::{self, Pwm},
     spi::{self, Async, Spi},
 };
 use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, channel::Channel};
@@ -30,7 +31,12 @@ type DisplayInterface = SPIInterface<
 >;
 type RstOutput = Output<'static, PIN_13>;
 
+static BACKLIGHT_EVENT: Channel<ThreadModeRawMutex, u16, 2> = Channel::new();
 static KEYBOARD_EVENT: Channel<ThreadModeRawMutex, String<24>, 2> = Channel::new();
+
+pub async fn set_backlight(percent: u16) {
+    BACKLIGHT_EVENT.send(percent).await;
+}
 
 pub async fn display_key_code(keycodes: String<24>) {
     KEYBOARD_EVENT.send(keycodes).await;
@@ -47,26 +53,39 @@ pub fn init(
     rst: PIN_13,
     bl: PIN_16,
     tx_dma: AnyChannel,
+    bl_pwm: PWM_CH0,
 ) {
-    let mut config = spi::Config::default();
-    config.frequency = DISPLAY_FREQ;
-    config.phase = spi::Phase::CaptureOnSecondTransition;
-    config.polarity = spi::Polarity::IdleHigh;
+    let mut spi_config = spi::Config::default();
+    spi_config.frequency = DISPLAY_FREQ;
+    spi_config.phase = spi::Phase::CaptureOnSecondTransition;
+    spi_config.polarity = spi::Polarity::IdleHigh;
 
-    let spi = Spi::new_txonly(spi, clk, mosi, tx_dma, config);
+    let spi = Spi::new_txonly(spi, clk, mosi, tx_dma, spi_config);
 
     let spi = ExclusiveDevice::new(spi, Output::new(cs, Level::High), Delay);
 
     let dc = Output::new(dc, Level::Low);
     let rst = Output::new(rst, Level::Low);
 
-    // Enable LCD backlight
-    let _bl = Output::new(bl, Level::High);
+    spawner.must_spawn(backlight_task(bl, bl_pwm));
 
     // display interface abstraction from SPI and DC
     let di = SPIInterface::new(spi, dc);
 
     spawner.must_spawn(display_task(di, rst));
+}
+
+#[embassy_executor::task]
+async fn backlight_task(bl: PIN_16, pwm: PWM_CH0) {
+    // Enable LCD backlight
+    let mut pwm_config = pwm::Config::default();
+    pwm_config.top = 100;
+    pwm_config.compare_a = 50;
+    let mut bl_pwm = Pwm::new_output_a(pwm, bl, pwm_config.clone());
+    loop {
+        pwm_config.compare_a = BACKLIGHT_EVENT.recv().await;
+        bl_pwm.set_config(&pwm_config);
+    }
 }
 
 #[embassy_executor::task]

@@ -199,6 +199,7 @@ pub async fn main(spawner: Spawner) {
             p.PIN_13,
             p.PIN_16,
             p.DMA_CH0.degrade(),
+            p.PWM_CH0,
         );
     }
 
