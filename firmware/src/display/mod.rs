@@ -1,7 +1,7 @@
 use embassy_executor::Spawner;
 use embassy_rp::{
     dma::AnyChannel,
-    gpio::{self, Level, Output},
+    gpio::{Level, Output},
     peripherals::{PIN_11, PIN_12, PIN_13, PIN_16, PIN_22, PIN_23, SPI0},
     spi::{self, Async, Spi},
 };
@@ -22,6 +22,7 @@ use embedded_graphics::{
 use mipidsi::Builder;
 
 const DISPLAY_FREQ: u32 = 64_000_000;
+const FERRIS_WIDTH: u32 = 86;
 
 type DisplayInterface = SPIInterface<
     ExclusiveDevice<Spi<'static, SPI0, Async>, Output<'static, PIN_12>, Delay>,
@@ -54,7 +55,7 @@ pub fn init(
 
     let spi = Spi::new_txonly(spi, clk, mosi, tx_dma, config);
 
-    let spi = ExclusiveDevice::new(spi, Output::new(cs, gpio::Level::Low), Delay);
+    let spi = ExclusiveDevice::new(spi, Output::new(cs, Level::High), Delay);
 
     let dc = Output::new(dc, Level::Low);
     let rst = Output::new(rst, Level::Low);
@@ -72,12 +73,17 @@ pub fn init(
 async fn display_task(di: DisplayInterface, rst: RstOutput) {
     // Define the display from the display interface and initialize it
     #[cfg(feature = "gc9a01")]
-    let mut display = Builder::gc9a01(di).init(&mut Delay, Some(rst)).unwrap();
+    let mut display = Builder::gc9a01(di)
+        .with_display_size(240, 240)
+        .with_color_order(mipidsi::ColorOrder::Bgr)
+        .with_invert_colors(mipidsi::ColorInversion::Inverted)
+        .init(&mut Delay, Some(rst))
+        .unwrap();
 
     // Make the display all black
     display.clear(Rgb565::BLACK).unwrap();
 
-    let raw_image_data = ImageRawLE::new(include_bytes!("../../assets/ferris.raw"), 86);
+    let raw_image_data = ImageRawLE::new(include_bytes!("../../assets/ferris.raw"), FERRIS_WIDTH);
     let ferris = Image::new(&raw_image_data, Point::new(34, 68));
     // Display the image
     ferris.draw(&mut display).unwrap();
