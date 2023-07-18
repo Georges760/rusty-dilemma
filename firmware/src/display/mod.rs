@@ -5,16 +5,19 @@ use embassy_rp::{
     peripherals::{PIN_11, PIN_12, PIN_13, PIN_16, PIN_22, PIN_23, SPI0},
     spi::{self, Async, Spi},
 };
-use embassy_time::{Delay, Duration};
+use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, channel::Channel};
+use embassy_time::Delay;
 use embedded_hal_async::spi::ExclusiveDevice;
 
-use crate::utils::Ticker;
+use heapless::String;
 
 use display_interface_spi::SPIInterface;
 use embedded_graphics::{
     image::{Image, ImageRawLE},
+    mono_font::{ascii::FONT_10X20, MonoTextStyle},
     pixelcolor::Rgb565,
     prelude::*,
+    text::Text,
 };
 use mipidsi::Builder;
 
@@ -25,6 +28,12 @@ type DisplayInterface = SPIInterface<
     Output<'static, PIN_11>,
 >;
 type RstOutput = Output<'static, PIN_13>;
+
+static KEYBOARD_EVENT: Channel<ThreadModeRawMutex, String<24>, 2> = Channel::new();
+
+pub async fn display_key_code(keycodes: String<24>) {
+    KEYBOARD_EVENT.send(keycodes).await;
+}
 
 #[allow(clippy::too_many_arguments)]
 pub fn init(
@@ -73,10 +82,12 @@ async fn display_task(di: DisplayInterface, rst: RstOutput) {
     // Display the image
     ferris.draw(&mut display).unwrap();
 
-    let mut ticker = Ticker::every(Duration::from_hz(24));
-
     loop {
-        //TODO display infos here
-        ticker.next().await;
+        let keycodes = KEYBOARD_EVENT.recv().await;
+
+        let style = MonoTextStyle::new(&FONT_10X20, Rgb565::GREEN);
+        Text::new(keycodes.as_str(), Point::new(20, 200), style)
+            .draw(&mut display)
+            .unwrap();
     }
 }

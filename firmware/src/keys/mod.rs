@@ -8,10 +8,13 @@ use embassy_sync::{
     blocking_mutex::raw::ThreadModeRawMutex, channel::Channel, pubsub::PubSubChannel,
 };
 use embassy_time::Duration;
+use heapless::String;
 use keyberon::{key_code::KeyCode, layout::Event};
 use packed_struct::PrimitiveEnum;
 use usbd_human_interface_device::device::keyboard::NKROBootKeyboardReport;
 
+#[cfg(feature = "display")]
+use crate::display::display_key_code;
 use crate::{
     interboard::{self, THIS_SIDE_MESSAGE_BUS},
     messages::{
@@ -187,6 +190,54 @@ async fn key_event_processor() {
                 usbd_human_interface_device::page::Keyboard::from_primitive(*k as u8)
             })))
             .await;
+
+            #[cfg(feature = "display")]
+            if side::get_side().is_left() {
+                let mut s: String<24> = String::new();
+                for i in state.iter() {
+                    s.push(match i {
+                        KeyCode::A => 'A',
+                        KeyCode::B => 'B',
+                        KeyCode::C => 'C',
+                        KeyCode::D => 'D',
+                        KeyCode::E => 'E',
+                        KeyCode::F => 'F',
+                        KeyCode::G => 'G',
+                        KeyCode::H => 'H',
+                        KeyCode::I => 'I',
+                        KeyCode::J => 'J',
+                        KeyCode::K => 'K',
+                        KeyCode::L => 'L',
+                        KeyCode::M => 'M',
+                        KeyCode::N => 'N',
+                        KeyCode::O => 'O',
+                        KeyCode::P => 'P',
+                        KeyCode::Q => 'Q',
+                        KeyCode::R => 'R',
+                        KeyCode::S => 'S',
+                        KeyCode::T => 'T',
+                        KeyCode::U => 'U',
+                        KeyCode::V => 'V',
+                        KeyCode::W => 'W',
+                        KeyCode::X => 'X',
+                        KeyCode::Y => 'Y',
+                        KeyCode::Z => 'Z',
+                        KeyCode::Kp0 => '0',
+                        KeyCode::Kp1 => '1',
+                        KeyCode::Kp2 => '2',
+                        KeyCode::Kp3 => '3',
+                        KeyCode::Kp4 => '4',
+                        KeyCode::Kp5 => '5',
+                        KeyCode::Kp6 => '6',
+                        KeyCode::Kp7 => '7',
+                        KeyCode::Kp8 => '8',
+                        KeyCode::Kp9 => '9',
+                        _ => ' ',
+                    })
+                    .unwrap();
+                }
+                display_key_code(s).await;
+            }
         }
     }
 }
@@ -195,7 +246,11 @@ pub fn init(spawner: &Spawner, scanner: ScannerInstance<'static>) {
     spawner.must_spawn(matrix_processor());
     spawner.must_spawn(matrix_scanner(scanner));
     spawner.must_spawn(send_events_to_other_side());
-    if side::this_side_has_usb() {
+    #[cfg(not(feature = "display"))]
+    let cond = side::this_side_has_usb();
+    #[cfg(feature = "display")]
+    let cond = side::this_side_has_usb() || side::get_side().is_left();
+    if cond {
         spawner.must_spawn(receive_events_from_other_side());
         spawner.must_spawn(key_event_processor());
     }
