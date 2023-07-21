@@ -43,6 +43,7 @@ async fn handle_mouse_clicks() {
             let buttons: u8 = [
                 if b.left() { 0b01 } else { 0 },
                 if b.right() { 0b10 } else { 0 },
+                if b.middle() { 0b11 } else { 0 },
             ]
             .into_iter()
             .sum();
@@ -75,7 +76,7 @@ impl ScrollDivider {
         (out_bwd, self.bwd) = self.bwd.div_mod_floor(&SCROLL_PERIOD);
 
         0i8.saturating_add_unsigned(out_fwd)
-           .saturating_sub_unsigned(out_bwd)
+            .saturating_sub_unsigned(out_bwd)
     }
 }
 

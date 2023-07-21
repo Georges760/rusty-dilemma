@@ -23,13 +23,17 @@ use crate::{
     utils::Ticker,
 };
 
-use self::{
-    chord::ChordingEngine,
-    layout::{CustomEvent, LAYERS},
-};
+use self::chord::ChordingEngine;
+#[cfg(feature = "layout_simmsb")]
+use self::layout::{chorder, CustomEvent, LAYERS};
+#[cfg(feature = "layout_miryoku")]
+use self::layout_miryoku::{chorder, CustomEvent, LAYERS};
 
 pub mod chord;
+#[cfg(feature = "layout_simmsb")]
 pub mod layout;
+#[cfg(feature = "layout_miryoku")]
+pub mod layout_miryoku;
 pub mod scan;
 
 /// Raw matrix presses and releases
@@ -84,7 +88,7 @@ async fn matrix_scanner(mut scanner: ScannerInstance<'static>) {
 async fn matrix_processor() {
     let mut sub = MATRIX_EVENTS.subscriber().unwrap();
     let key_events = KEY_EVENTS.publisher().unwrap();
-    let mut chorder = ChordingEngine::new(layout::chorder());
+    let mut chorder = ChordingEngine::new(chorder());
     let mut ticker = Ticker::every(Duration::from_hz(1000));
 
     loop {
@@ -168,6 +172,7 @@ async fn key_event_processor() {
                         CustomEvent::MouseLeft => mouse_state.set_left(is_press),
                         CustomEvent::MouseRight => mouse_state.set_right(is_press),
                         CustomEvent::MouseScroll => mouse_state.set_scrolling(is_press),
+                        CustomEvent::MouseMiddle => mouse_state.set_middle(is_press),
                     }
 
                     let evt = DeviceToDevice::SyncMouseState(mouse_state);

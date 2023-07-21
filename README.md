@@ -2,10 +2,6 @@
 
 https://github.com/simmsb/rusty-dilemma/assets/5330444/2e6345b6-a52b-436a-b9c9-535a1fc93490
 
-## Layout
-
-![Default Layout](layouts/rusty-dilemma.png)
-
 ## Features
 
 - Normal keypresses, mod taps, layers, chords, mouse keys
@@ -15,6 +11,15 @@ https://github.com/simmsb/rusty-dilemma/assets/5330444/2e6345b6-a52b-436a-b9c9-5
 - Double tapping the update button puts the mcu into dfu mode
 - The device pretends to be a RP Pico and supports being put into DFU mode by
   `picotool`
+
+## Layouts
+
+### Default
+![Default Layout](layouts/rusty-dilemma.png)
+
+### [Miryoku](https://github.com/manna-harbour/miryoku)
+![Miryoku Layout](https://github.com/manna-harbour/miryoku/raw/master/data/cover/miryoku-kle-cover.png)
+To select the Miryoku layout add `--no-default-features --features binaryinfo,layout_miryoku` to the build command.
 
 ## Building
 

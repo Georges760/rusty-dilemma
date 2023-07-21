@@ -100,7 +100,10 @@ binaryinfo = ["rp-binary-info"]
 
 m2 = []
 
-default = ["binaryinfo"]
+layout_simmsb = []
+layout_miryoku = []
+
+default = ["binaryinfo", "layout_simmsb"]
 
 [build-dependencies]
 chrono = "0.4.19"

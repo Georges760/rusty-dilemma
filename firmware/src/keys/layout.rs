@@ -13,6 +13,7 @@ pub enum CustomEvent {
     MouseLeft,
     MouseRight,
     MouseScroll,
+    MouseMiddle,
 }
 
 pub type Layers = keyberon::layout::Layers<COLS, { ROWS + 1 }, N_LAYERS, CustomEvent>;
