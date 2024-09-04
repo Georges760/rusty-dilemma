@@ -13,8 +13,8 @@ path = "src/bin.rs"
 
 [dependencies]
 cortex-m = { version = "0.7.7", features = ["inline-asm"] }
-cortex-m-rt = "0.7.4"
-rp2040-hal = "0.10.1"
+cortex-m-rt = "0.7.3"
+rp2040-hal = "0.10.2"
 atomic-polyfill = "1.0.3"
 rp-binary-info = { git = "https://github.com/rp-rs/rp-binary-info.git", optional = true }
 embedded-hal = "1.0.0"
