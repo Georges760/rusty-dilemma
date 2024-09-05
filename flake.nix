@@ -103,7 +103,7 @@
         rec
         {
           devShells.default = craneLib.devShell {
-            packages = with pkgs; [ picotool libiconv ];
+            packages = with pkgs; [ picotool libiconv just ];
           };
           # binaries don't currently work because we need the macros package to be built with std supported, crane seems to do some weird stuff that makes it forced onto a no-std build env
           # devShells.default = pkgs.mkShell {

@@ -3,7 +3,7 @@
 
 use core::sync::atomic::AtomicU32;
 
-use cortex_m_rt::{entry, exception};
+use cortex_m_rt::{exception};
 use embedded_hal::digital::OutputPin;
 use rp2040_hal::{pac, rom_data::reset_to_usb_boot, Sio};
 
@@ -40,7 +40,7 @@ unsafe fn check_bootloader() {
 
 pub const FLASH_BASE: *const u32 = 0x10000000 as _;
 
-#[entry]
+#[rp2040_hal::entry]
 fn main() -> ! {
     let mut pac = pac::Peripherals::take().unwrap();
     let sio = Sio::new(pac.SIO);
