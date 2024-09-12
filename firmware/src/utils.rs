@@ -13,29 +13,17 @@ pub trait WhichDebug = ::core::fmt::Debug;
 #[cfg(feature = "probe")]
 pub trait WhichDebug = ::defmt::Format;
 
+#[macro_export]
 macro_rules! singleton {
-    ($val:expr) => {{
-        type T = impl Sized;
-        static STATIC_CELL: ::static_cell::StaticCell<T> = ::static_cell::StaticCell::new();
+    ($t:ty, $val:expr) => {{
+        static STATIC_CELL: ::static_cell::StaticCell<($t,)> = ::static_cell::StaticCell::new();
         let (x,) = STATIC_CELL.init(($val,));
         x
     }};
 }
 
-#[allow(unused_macros)]
-macro_rules! general_future_executor {
-    ($name:ident, $tyname:ident) => {
-        type $tyname = impl ::futures::Future;
-
-        #[embassy_executor::task]
-        async fn $name(fut: $tyname) {
-            fut.await;
-        }
-    };
-}
-
 #[allow(unused_imports)]
-pub(crate) use {general_future_executor, singleton};
+pub(crate) use singleton;
 
 pub struct Ticker {
     last_tick: Instant,

@@ -1,7 +1,6 @@
 #![no_std]
 #![allow(incomplete_features, async_fn_in_trait)]
 #![feature(
-    iter_repeat_n,
     type_alias_impl_trait,
     impl_trait_in_assoc_type,
     trait_alias,
@@ -11,7 +10,6 @@
     const_maybe_uninit_array_assume_init,
     const_mut_refs,
     const_maybe_uninit_write,
-    option_take_if,
     // generic_const_exprs: would be nice but breaks things
 )]
 

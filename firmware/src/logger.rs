@@ -14,7 +14,7 @@ use crate::utils::singleton;
 static BB: BBBuffer<256> = BBBuffer::new();
 
 pub fn init() {
-    let logger: &mut Logger = singleton!(Logger::init());
+    let logger: &mut Logger = singleton!(Logger, Logger::init());
     let logger = logger as &dyn log_log::Log;
     unsafe {
         let _ = log_log::set_logger_racy(logger)

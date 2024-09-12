@@ -9,7 +9,7 @@ use embassy_executor::Spawner;
 //     rusty_dilemma::main(spawner).await;
 // }
 
-use rusty_dilemma::utils::MeasuringExecutor;
+use rusty_dilemma::{singleton, utils::MeasuringExecutor};
 
 #[embassy_executor::task]
 async fn asyncmain(spawner: Spawner) {
@@ -18,7 +18,7 @@ async fn asyncmain(spawner: Spawner) {
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
-    let executor = static_cell::make_static!(MeasuringExecutor::new());
+    let executor = singleton!(MeasuringExecutor, MeasuringExecutor::new());
     // let executor = static_cell::make_static!(embassy_executor::Executor::new());
 
     executor.run(|spawner| {

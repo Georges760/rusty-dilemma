@@ -100,7 +100,7 @@ impl PicoToolClass {
 }
 
 pub fn init<'d, D: Driver<'d>>(builder: &mut Builder<'d, D>) {
-    let state = utils::singleton!(State {
+    let state = utils::singleton!(State, State {
         control: MaybeUninit::uninit()
     });
 

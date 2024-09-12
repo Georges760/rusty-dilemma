@@ -32,7 +32,7 @@
         let
           arm-toolchain-plain = fenix.packages.${system}.fromToolchainFile {
             file = ./rust-toolchain.toml;
-            sha256 = "sha256-SKrgSoah/i97Qng3btr3l2ax9yn2eftY0+yofsPNkoY=";
+            sha256 = "sha256-UH3aTxjEdeXYn/uojGVTHrJzZRCc3ODd05EDFvHmtKE=";
           };
           native-toolchain = (fenix.packages.${system}.complete.withComponents [
             "cargo"
@@ -77,7 +77,7 @@
               ];
             };
 
-            cargoExtraArgs = "-Z build-std=core,panic_abort,alloc -Z build-std-features=panic_immediate_abort,core/turbowakers --target ${target} ${args}";
+            cargoExtraArgs = "-Z build-std=core,panic_abort,alloc -Z build-std-features=optimize_for_size,panic_immediate_abort,core/turbowakers --target ${target} ${args}";
             CARGO_PROFILE = profile;
             pname = "rusty-dilemma";
             version = "0.1.0";

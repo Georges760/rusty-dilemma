@@ -61,9 +61,9 @@ async fn eventer_task(tx: Writer<'static, CS, BUF_SIZE>, rx: Reader<'static, CS,
 }
 
 pub fn init(spawner: &Spawner, builder: &mut Builder<'static, USBDriver>) {
-    let cdc_state = utils::singleton!(State::new());
-    let from_usb_pipe = utils::singleton!(Pipe::<CS, BUF_SIZE>::new());
-    let to_usb_pipe = utils::singleton!(Pipe::<CS, BUF_SIZE>::new());
+    let cdc_state = utils::singleton!(State, State::new());
+    let from_usb_pipe = utils::singleton!(Pipe<CS, BUF_SIZE>, Pipe::new());
+    let to_usb_pipe = utils::singleton!(Pipe<CS, BUF_SIZE>, Pipe::new());
 
     let state = make_state(cdc_state, builder);
     let (serial_tx, serial_rx) = state.class.split();

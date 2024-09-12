@@ -60,10 +60,9 @@ impl Parse for Chord {
     }
 }
 
-fn singleton(x: TokenStream) -> TokenStream {
+fn singleton(typ: TokenStream, x: TokenStream) -> TokenStream {
     quote!({
-        type T = impl Sized;
-        static STATIC_CELL: ::static_cell::StaticCell<T> = ::static_cell::StaticCell::new();
+        static STATIC_CELL: ::static_cell::StaticCell<(#typ,)> = ::static_cell::StaticCell::new();
         let (x,) = STATIC_CELL.init((#x,));
         x
     })
@@ -91,7 +90,7 @@ pub fn chords(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
             keys_map.entry([key.val.0, key.val.1], &i.to_string());
         }
         let keys_t = keys_map.build().to_string().parse::<TokenStream>().unwrap();
-        let key_states_t = singleton(quote!([false; #num_keys]));
+        let key_states_t = singleton(quote!([bool; #num_keys]), quote!([false; #num_keys]));
         let actions_t = c.outputs.iter().map(|Key { x, y, .. }| quote!((#x, #y)));
         let action_t = quote!([#(#actions_t),*]);
 
@@ -111,7 +110,8 @@ pub fn chords(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
         )
     });
 
-    let chord_defns_t = singleton(quote!([#(#chord_defns),*]));
+    let num_chords = chord_defns.len();
+    let chord_defns_t = singleton(quote!([crate::keys::chord::Chord; #num_chords]), quote!([#(#chord_defns),*]));
 
     let mut key_chord_map_p = phf_codegen::Map::new();
     for (key, val) in key_chord_map {
@@ -127,7 +127,7 @@ pub fn chords(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
         .unwrap();
 
     quote!({
-        let chords = #chord_defns_t;
+        let chords = #chord_defns_t.as_mut_slice();
         static KEY_CHORD_MAP: ::phf::Map<[u8; 2], &[usize]> = #key_chord_map_t;
 
         crate::keys::chord::Chorder {

@@ -17,20 +17,28 @@ pub mod device;
 pub mod hid;
 pub mod picotool;
 
-pub type USBDriver = impl embassy_usb::driver::Driver<'static>;
+mod usb_driver {
+    use embassy_rp::{peripherals::USB, usb::Driver};
+
+    use super::GUESSED_OS;
+
+    pub type USBDriver = impl embassy_usb::driver::Driver<'static>;
+
+    pub fn set_guesser(driver: Driver<'static, USB>) -> USBDriver {
+        let guesser = embassy_os_guess::OSGuesser::new(|guess| {
+            let _ = GUESSED_OS.set(guess);
+        });
+        guesser.wrap_driver(driver)
+    }
+}
+
+pub use usb_driver::{USBDriver, set_guesser};
 
 static GUESSED_OS: once_cell::sync::OnceCell<embassy_os_guess::OS> =
     once_cell::sync::OnceCell::new();
 
 pub fn guessed_host_os() -> Option<embassy_os_guess::OS> {
     GUESSED_OS.get().copied()
-}
-
-fn set_guesser(driver: Driver<'static, USB>) -> USBDriver {
-    let guesser = embassy_os_guess::OSGuesser::new(|guess| {
-        let _ = GUESSED_OS.set(guess);
-    });
-    guesser.wrap_driver(driver)
 }
 
 pub fn init(spawner: &Spawner, driver: Driver<'static, USB>) {

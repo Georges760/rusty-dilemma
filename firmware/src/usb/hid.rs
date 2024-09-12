@@ -162,8 +162,8 @@ async fn interboard_receiver() {
 }
 
 pub fn init(spawner: &Spawner, builder: &mut Builder<'static, USBDriver>) {
-    let mouse_state = utils::singleton!(embassy_usb::class::hid::State::new());
-    let keyboard_state = utils::singleton!(embassy_usb::class::hid::State::new());
+    let mouse_state = utils::singleton!(embassy_usb::class::hid::State, embassy_usb::class::hid::State::new());
+    let keyboard_state = utils::singleton!(embassy_usb::class::hid::State, embassy_usb::class::hid::State::new());
 
     let mouse_hid_writer = HidWriter::new(
         builder,
