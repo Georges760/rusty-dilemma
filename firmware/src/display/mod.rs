@@ -64,10 +64,10 @@ fn run(spi: SPI0, clk: PIN_22, mosi: PIN_23, cs: PIN_12, dc: PIN_11) -> ! {
             let window = Rc::clone(&window);
             move || {
                 window.set_keypresses(KEYS_PRESSED.load(portable_atomic::Ordering::Relaxed) as i32);
-                window.set_ticks(
-                    crate::utils::executor_metrics::WAKEUPS.load(portable_atomic::Ordering::Relaxed)
-                        as i32,
-                );
+                // window.set_ticks(
+                //     crate::utils::executor_metrics::WAKEUPS.load(portable_atomic::Ordering::Relaxed)
+                //         as i32,
+                // );
 
                 let awake =
                     crate::utils::executor_metrics::AWAKE.load(portable_atomic::Ordering::Relaxed);

@@ -58,7 +58,6 @@ component Value {
 
 export component MainWindow inherits Window {
     in property <int> keypresses;
-    in property <int> ticks;
     in property <int> cpu-util;
 
     width: 240px;
@@ -67,7 +66,6 @@ export component MainWindow inherits Window {
 
     private property <[{title: string, value: string}]> values: [
         {title: "Keystrokes", value: keypresses},
-        {title: "Ticks", value: ticks},
         {title: "CPU Util", value: cpu-util},
     ];
 

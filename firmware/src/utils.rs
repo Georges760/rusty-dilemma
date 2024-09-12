@@ -56,9 +56,9 @@ impl Ticker {
 }
 
 pub mod executor_metrics {
-    use portable_atomic::{AtomicU64, AtomicUsize};
+    use portable_atomic::AtomicU64;
 
-    pub static WAKEUPS: AtomicUsize = AtomicUsize::new(0);
+    // pub static WAKEUPS: AtomicUsize = AtomicUsize::new(0);
     pub static AWAKE: AtomicU64 = AtomicU64::new(0);
     pub static SLEEP: AtomicU64 = AtomicU64::new(0);
 }
@@ -110,7 +110,7 @@ impl MeasuringExecutor {
                 },
             );
 
-            executor_metrics::WAKEUPS.add(1, portable_atomic::Ordering::Relaxed);
+            // executor_metrics::WAKEUPS.add(1, portable_atomic::Ordering::Relaxed);
             executor_metrics::AWAKE.add(awake, portable_atomic::Ordering::Relaxed);
             executor_metrics::SLEEP.add(sleeping, portable_atomic::Ordering::Release);
         }
