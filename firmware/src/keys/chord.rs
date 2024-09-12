@@ -1,7 +1,7 @@
 use embassy_time::{Duration, Instant};
 
 pub type Key = (u8, u8);
-pub const CHORD_TIMEOUT: Duration = Duration::from_millis(40);
+pub const CHORD_TIMEOUT: Duration = Duration::from_millis(30);
 
 pub struct Chord {
     pub key_map: &'static phf::Map<[u8; 2], usize>,

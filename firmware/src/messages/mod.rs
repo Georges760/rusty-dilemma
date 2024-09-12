@@ -28,7 +28,7 @@ pub fn low_latency_msg<T>(msg: T) -> TransmittedMessage<T> {
 pub fn reliable_msg<T>(msg: T) -> TransmittedMessage<T> {
     TransmittedMessage {
         msg,
-        timeout: Some(Duration::from_millis(5)),
+        timeout: Some(Duration::from_millis(2)),
     }
 }
 

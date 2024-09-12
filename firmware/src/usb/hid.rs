@@ -171,7 +171,7 @@ pub fn init(spawner: &Spawner, builder: &mut Builder<'static, USBDriver>) {
         embassy_usb::class::hid::Config {
             report_descriptor: MouseReport::desc(),
             request_handler: None,
-            poll_ms: 10,
+            poll_ms: 5,
             max_packet_size: 8,
         },
     );
@@ -182,7 +182,7 @@ pub fn init(spawner: &Spawner, builder: &mut Builder<'static, USBDriver>) {
         embassy_usb::class::hid::Config {
             report_descriptor: NKRO_BOOT_KEYBOARD_REPORT_DESCRIPTOR,
             request_handler: None,
-            poll_ms: 10,
+            poll_ms: 5,
             max_packet_size: 64,
         },
     );
