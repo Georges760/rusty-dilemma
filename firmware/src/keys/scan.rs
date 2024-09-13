@@ -53,7 +53,7 @@ pub trait ScanColumns {
     fn scan_columns(&self, debouncers: &mut Self::Debouncers) -> Self::Result;
 }
 
-const DEBOUNCE_PERIOD: u8 = 10; // polling at 500hz, 10 ticks should be 20ms
+const DEBOUNCE_PERIOD: u8 = 5; // polling at 1000hz, 5 ticks = 5ms
 
 impl<C0, C1, C2, C3> ScanColumns for (C0, C1, C2, C3)
 where

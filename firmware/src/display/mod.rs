@@ -83,6 +83,7 @@ fn run(spi: SPI0, clk: PIN_22, mosi: PIN_23, cs: PIN_12, dc: PIN_11) -> ! {
 
     window.run().unwrap();
 
+    // should never happen, as our 'window' can't be quit
     loop {}
 }
 

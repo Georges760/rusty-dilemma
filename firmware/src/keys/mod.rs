@@ -58,7 +58,7 @@ pub type ScannerInstance<'a> = scan::Scanner<
 
 #[embassy_executor::task]
 async fn matrix_scanner(mut scanner: ScannerInstance<'static>) {
-    let mut ticker = Ticker::every(Duration::from_hz(500));
+    let mut ticker = Ticker::every(Duration::from_hz(1000));
     let matrix_events = MATRIX_EVENTS.publisher().unwrap();
 
     let is_right = side::get_side().is_right();
@@ -91,16 +91,22 @@ async fn matrix_processor() {
                 //key_events.publish(evt).await;
                 let evts = chorder.process(evt);
                 for evt in evts {
-                    key_events.publish(evt).await;
-                    KEYS_TO_OTHER_SIDE.send(evt).await;
+                    embassy_futures::join::join(
+                        key_events.publish(evt),
+                        KEYS_TO_OTHER_SIDE.send(evt),
+                    )
+                    .await;
                 }
             }
             embassy_futures::select::Either::First(_) => {
                 let keys = chorder.tick();
                 for (x, y) in keys {
                     let evt = keyberon::layout::Event::Press(x, y);
-                    key_events.publish(evt).await;
-                    KEYS_TO_OTHER_SIDE.send(evt).await;
+                    embassy_futures::join::join(
+                        key_events.publish(evt),
+                        KEYS_TO_OTHER_SIDE.send(evt),
+                    )
+                    .await;
                 }
             }
         }
@@ -175,8 +181,11 @@ async fn key_event_processor() {
 
                     let evt = DeviceToDevice::SyncMouseState(mouse_state);
 
-                    interboard::send_msg(reliable_msg(evt.clone()), 1).await;
-                    msg_bus_pub.publish(evt).await;
+                    embassy_futures::join::join(
+                        interboard::send_msg(reliable_msg(evt.clone()), 1),
+                        msg_bus_pub.publish(evt),
+                    )
+                    .await;
                 }
             }
         }
