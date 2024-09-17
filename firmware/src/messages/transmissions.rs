@@ -15,7 +15,7 @@ const BUF_SIZE: usize = 128;
 
 struct EventSenderImpl<'e, T> {
     mix_chan: &'e Channel<ThreadModeRawMutex, CmdOrAck<T>, 16>,
-    ack_signal: &'e Signal<ThreadModeRawMutex, ()>,
+    ack_signal: &'e Signal<ThreadModeRawMutex, bool>,
 }
 
 pub trait EventSender<T> {
@@ -41,7 +41,7 @@ struct EventInProcessor<'e, Sent, RX, FnTx> {
     rx: RX,
     out_cb: FnTx,
     mix_chan: &'e Channel<ThreadModeRawMutex, CmdOrAck<Sent>, 16>,
-    ack_signal: &'e Signal<ThreadModeRawMutex, ()>,
+    ack_signal: &'e Signal<ThreadModeRawMutex, bool>,
 }
 
 impl<'e, Sent, RX, FnTx> EventInProcessor<'e, Sent, RX, FnTx>
@@ -74,6 +74,7 @@ where
                         buf
                     }
                     FeedResult::DeserError(buf) => {
+                        self.mix_chan.send(CmdOrAck::Nack).await;
                         // log::debug!(
                         //     "Message decoder failed to deserialize a message of type {}: {:?}",
                         //     core::any::type_name::<CmdOrAck<Received>>(),
@@ -96,12 +97,16 @@ where
                                         last_seen_id = Some(c.command_seq.id());
                                     }
                                 } else {
+                                    self.mix_chan.send(CmdOrAck::Nack).await;
                                     // log::debug!("Corrupted parsed command: {:?}", c);
                                 }
                             }
                             CmdOrAck::Ack => {
-                                self.ack_signal.signal(());
-                            }
+                                self.ack_signal.signal(true);
+                            },
+                            CmdOrAck::Nack => {
+                                self.ack_signal.signal(false);
+                            },
                         }
 
                         remaining
@@ -157,7 +162,7 @@ impl<'a, T: Hash + Clone> EventSender<T> for EventSenderImpl<'a, T> {
 
             self.ack_signal.reset();
 
-            if with_timeout(timeout, self.ack_signal.wait()).await.is_ok() {
+            if with_timeout(timeout, self.ack_signal.wait()).await.unwrap_or(false) {
                 // log::debug!("Waiter for id {} completed", id);
                 return;
             }

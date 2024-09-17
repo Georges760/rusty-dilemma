@@ -74,6 +74,7 @@ impl<T: Hash> Command<T> {
 pub enum CmdOrAck<T> {
     Cmd(Command<T>),
     Ack,
+    Nack,
 }
 
 #[derive(Debug, Default)]
