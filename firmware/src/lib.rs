@@ -139,7 +139,7 @@ pub async fn main(spawner: Spawner) {
     rng::init();
 
     let mut pio0 = Pio::new(p.PIO0, PioIrq0);
-    interboard::init(&spawner, &mut pio0.common, pio0.sm0, pio0.sm1, p.PIN_1);
+    interboard::init(&spawner, &mut pio0.common, pio0.sm0, pio0.sm1, p.PIN_1, p.DMA_CH4);
 
     flash::init(p.FLASH, p.DMA_CH3.degrade()).await;
 

@@ -53,7 +53,7 @@ pub trait ScanColumns {
     fn scan_columns(&self, debouncers: &mut Self::Debouncers) -> Self::Result;
 }
 
-const DEBOUNCE_PERIOD: u8 = 5; // polling at 1000hz, 5 ticks = 5ms
+const DEBOUNCE_PERIOD: u8 = 40; // polling at 1000hz
 
 impl<C0, C1, C2, C3> ScanColumns for (C0, C1, C2, C3)
 where
@@ -121,32 +121,33 @@ where
 }
 
 pub struct Debouncer<const MAX: u8> {
-    integrator: u8,
+    timer: u8,
     is_pressed: bool,
 }
 
 impl<const MAX: u8> Default for Debouncer<MAX> {
     fn default() -> Self {
         Self {
-            integrator: Default::default(),
-            is_pressed: Default::default(),
+            timer: 0,
+            is_pressed: false,
         }
     }
 }
 
 impl<const MAX: u8> Debouncer<MAX> {
     fn update(&mut self, is_pressed: bool) -> Option<bool> {
+        self.timer = self.timer.saturating_sub(1);
+
         if is_pressed {
-            self.increment()
+            self.pressed()
         } else {
-            self.decrement()
+            self.unpressed()
         }
     }
 
-    fn decrement(&mut self) -> Option<bool> {
-        self.integrator = self.integrator.saturating_sub(1);
-
-        if self.integrator == 0 && self.is_pressed {
+    fn unpressed(&mut self) -> Option<bool> {
+        if self.timer == 0 && self.is_pressed {
+            self.timer = MAX;
             self.is_pressed = false;
             return Some(false);
         }
@@ -154,14 +155,12 @@ impl<const MAX: u8> Debouncer<MAX> {
         None
     }
 
-    fn increment(&mut self) -> Option<bool> {
-        if self.integrator >= MAX {
-            if !self.is_pressed {
-                self.is_pressed = true;
-                return Some(true);
-            }
-        } else {
-            self.integrator = self.integrator.saturating_add(1);
+    fn pressed(&mut self) -> Option<bool> {
+        if self.timer == 0 && !self.is_pressed {
+            self.timer = MAX;
+            self.is_pressed = true;
+
+            return Some(true);
         }
 
         None

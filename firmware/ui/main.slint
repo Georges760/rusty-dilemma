@@ -59,6 +59,8 @@ component Value {
 export component MainWindow inherits Window {
     in property <int> keypresses;
     in property <int> cpu-util;
+    // in property <int> failed-decodes;
+    // in property <int> nacks-received;
 
     width: 240px;
     height: 240px;
@@ -66,6 +68,8 @@ export component MainWindow inherits Window {
 
     private property <[{title: string, value: string}]> values: [
         {title: "Keystrokes", value: keypresses},
+        // {title: "Failed decodes", value: failed-decodes},
+        // {title: "Nacks received", value: nacks-received},
         {title: "CPU Util", value: cpu-util},
     ];
 

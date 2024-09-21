@@ -3,6 +3,7 @@ use embassy_futures::select;
 use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, channel::Channel, signal::Signal};
 use embassy_time::{with_timeout, Duration};
 use futures::Future;
+// use portable_atomic::AtomicUsize;
 use postcard::accumulator::{CobsAccumulator, FeedResult};
 use serde::{de::DeserializeOwned, Serialize};
 use shared::cmd::{CmdOrAck, Command};
@@ -10,6 +11,9 @@ use shared::cmd::{CmdOrAck, Command};
 use crate::utils::WhichDebug;
 
 use super::TransmittedMessage;
+
+// pub static FAILED_DECODES: AtomicUsize = AtomicUsize::new(0);
+// pub static NACKS_RECEIVED: AtomicUsize = AtomicUsize::new(0);
 
 const BUF_SIZE: usize = 128;
 
@@ -75,6 +79,7 @@ where
                     }
                     FeedResult::DeserError(buf) => {
                         self.mix_chan.send(CmdOrAck::Nack).await;
+                        // FAILED_DECODES.add(1, core::sync::atomic::Ordering::Relaxed);
                         // log::debug!(
                         //     "Message decoder failed to deserialize a message of type {}: {:?}",
                         //     core::any::type_name::<CmdOrAck<Received>>(),
@@ -98,6 +103,7 @@ where
                                     }
                                 } else {
                                     self.mix_chan.send(CmdOrAck::Nack).await;
+                                    // FAILED_DECODES.add(1, core::sync::atomic::Ordering::Relaxed);
                                     // log::debug!("Corrupted parsed command: {:?}", c);
                                 }
                             }
@@ -105,6 +111,7 @@ where
                                 self.ack_signal.signal(true);
                             },
                             CmdOrAck::Nack => {
+                                // NACKS_RECEIVED.add(1, core::sync::atomic::Ordering::Relaxed);
                                 self.ack_signal.signal(false);
                             },
                         }

@@ -4,10 +4,7 @@ use embassy_futures::{
     yield_now,
 };
 use embassy_rp::{
-    clocks,
-    peripherals::PIO0,
-    pio::{Common, FifoJoin, Pin, PioPin, ShiftDirection, StateMachine},
-    Peripheral,
+    clocks, dma::{self, AnyChannel}, peripherals::PIO0, pio::{Common, FifoJoin, Pin, PioPin, ShiftDirection, StateMachine}, Peripheral, PeripheralRef
 };
 use embassy_sync::{blocking_mutex::raw::ThreadModeRawMutex, pipe::Pipe};
 use embassy_time::{Duration, Timer};
@@ -27,14 +24,16 @@ pub fn init(
     tx_sm: SM<0>,
     rx_sm: SM<1>,
     pin: impl Peripheral<P = impl PioPin + 'static> + 'static,
+    dma: impl Peripheral<P = impl dma::Channel> + 'static,
 ) {
+    let dma = dma.into_ref().map_into();
     let mut pin = common.make_pio_pin(pin);
     pin.set_pull(embassy_rp::gpio::Pull::Up);
 
     let tx_sm = half_duplex_task_tx(common, tx_sm, &mut pin);
     let rx_sm = half_duplex_task_rx(common, rx_sm, &pin);
 
-    spawner.must_spawn(half_duplex_task(tx_sm, rx_sm, pin));
+    spawner.must_spawn(half_duplex_task(tx_sm, rx_sm, pin, dma));
 }
 pub type SM<const SM: usize> = StateMachine<'static, PIO0, { SM }>;
 
@@ -43,7 +42,7 @@ pub async fn enter_rx(tx_sm: &mut SM<0>, rx_sm: &mut SM<1>, pin: &mut Pin<'stati
         yield_now().await;
     }
 
-    Timer::after(Duration::from_micros(2000000 * 11 / USART_SPEED)).await;
+    Timer::after(Duration::from_micros(1000000 * 11 / USART_SPEED)).await;
 
     tx_sm.set_enable(false);
     pin.set_drive_strength(embassy_rp::gpio::Drive::_2mA);
@@ -65,20 +64,27 @@ pub fn enter_tx(tx_sm: &mut SM<0>, rx_sm: &mut SM<1>, pin: &mut Pin<'static, PIO
 }
 
 #[embassy_executor::task]
-pub async fn half_duplex_task(mut tx_sm: SM<0>, mut rx_sm: SM<1>, mut pin: Pin<'static, PIO0>) {
+pub async fn half_duplex_task(mut tx_sm: SM<0>,
+                              mut rx_sm: SM<1>,
+                              mut pin: Pin<'static, PIO0>,
+                              mut dma: PeripheralRef<'static, AnyChannel>
+) {
     enter_rx(&mut tx_sm, &mut rx_sm, &mut pin).await;
 
-    let mut buf = [0u8; 4];
+    let mut buf = [0u8; 16];
+    let mut bbuf = [0u32; 16];
 
     loop {
         match select(OTHER_SIDE_TX.read(&mut buf), rx_sm.rx().wait_pull()).await {
             select::Either::First(n) => {
                 // let now = Instant::now();
                 // crate::log::info!("sending bytes: {:?}", &buf[..n]);
-                enter_tx(&mut tx_sm, &mut rx_sm, &mut pin);
-                for b in &buf[..n] {
-                    tx_sm.tx().wait_push(!*b as u32).await;
+                for (n, x) in buf[..n].iter().enumerate() {
+                    bbuf[n] = !*x as u32;
                 }
+
+                enter_tx(&mut tx_sm, &mut rx_sm, &mut pin);
+                tx_sm.tx().dma_push(dma.reborrow(), &bbuf[..n]).await;
                 enter_rx(&mut tx_sm, &mut rx_sm, &mut pin).await;
                 // log::info!("sent bytes: {} in {}", &buf[..n], now.elapsed());
             }

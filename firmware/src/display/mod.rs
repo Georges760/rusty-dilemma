@@ -77,6 +77,9 @@ fn run(spi: SPI0, clk: PIN_22, mosi: PIN_23, cs: PIN_12, dc: PIN_11) -> ! {
                 let percentage_awake = 100 - ((100 * sleep) / (sleep + awake + 1));
 
                 window.set_cpu_util(percentage_awake as i32);
+
+                // window.set_failed_decodes(crate::messages::transmissions::FAILED_DECODES.load(core::sync::atomic::Ordering::Relaxed) as i32);
+                // window.set_nacks_received(crate::messages::transmissions::NACKS_RECEIVED.load(core::sync::atomic::Ordering::Relaxed) as i32);
             }
         },
     );

@@ -1,8 +1,6 @@
 use embassy_executor::Spawner;
 use embassy_rp::{
-    peripherals::PIO0,
-    pio::{Common, PioPin},
-    Peripheral,
+    dma, peripherals::PIO0, pio::{Common, PioPin}, Peripheral
 };
 
 use crate::messages::{device_to_device::DeviceToDevice, TransmittedMessage};
@@ -18,8 +16,9 @@ pub fn init(
     tx_sm: SM<0>,
     rx_sm: SM<1>,
     pin: impl Peripheral<P = impl PioPin + 'static> + 'static,
+    dma: impl Peripheral<P = impl dma::Channel> + 'static,
 ) {
-    onewire::init(spawner, common, tx_sm, rx_sm, pin);
+    onewire::init(spawner, common, tx_sm, rx_sm, pin, dma);
 
     spawner.must_spawn(channel::eventer_task());
 }
