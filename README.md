@@ -1,6 +1,14 @@
-# Rust firmware for the [dilemma v2](https://github.com/Bastardkb/Dilemma)
+# Rust firmware for the [dilemma v2](https://github.com/Bastardkb/Dilemma) keyboard
 
 https://github.com/simmsb/rusty-dilemma/assets/5330444/2e6345b6-a52b-436a-b9c9-535a1fc93490
+
+Rusty dilemma is firmware for the Dilemma v2 split keyboard written in Rust
+using the Embassy framework.
+
+This firmware does a fair amount of 'fun' things such as supporting an external
+display (and using the awesome Slint GUI library to do the drawing (and
+anti-aliased fonts are nice)), also the per key rgb animations are pretty damn
+pretty in my opinion :)
 
 ## Layout
 
