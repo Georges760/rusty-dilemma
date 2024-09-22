@@ -73,7 +73,8 @@ futures = { version = "0.3.30", default-features = false, features = [
 ] }
 heapless = "0.8.0"
 itertools = { version = "0.12.1", default-features = false }
-keyberon = { git = "https://github.com/TeXitoi/keyberon", version = "0.2.0" }
+keyberon = { git = "https://github.com/simmsb/keyberon", version = "0.2.0" }
+# keyberon = { git = "https://github.com/TeXitoi/keyberon", version = "0.2.0" }
 libm = { version = "0.2.8", optional = true }
 log_log = { package = "log", version = "0.4.22" }
 mipidsi = { git = "https://github.com/almindor/mipidsi", optional = true }
